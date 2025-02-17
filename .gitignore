@@ -1,0 +1,15 @@
+
+.idea/
+.venv/
+
+*__pycache__
+data/temp/*
+data/logs.log
+*.session-journal
+*.session
+/*.session-journal
+/*.session
+*.log
+test.py
+#_test.py
+__test.py
