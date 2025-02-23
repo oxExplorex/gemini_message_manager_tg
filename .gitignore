@@ -1,15 +1,21 @@
-
+# мусор
 .idea/
 .venv/
-
 *__pycache__
-data/temp/*
-data/logs.log
+
+# сессии тг
 *.session-journal
 *.session
 /*.session-journal
 /*.session
+
+# Миграции
+migrations
+
+# логи
 *.log
+
+# test
 test.py
-#_test.py
-__test.py
+_test.py
+
