@@ -3,11 +3,15 @@
 .venv/
 *__pycache__
 
+# config
+config.py
+
 # сессии тг
 *.session-journal
 *.session
-/*.session-journal
-/*.session
+*.session-shm
+*.session-wal
+
 
 # Миграции
 migrations
