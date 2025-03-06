@@ -25,11 +25,13 @@ def download_and_extract_github_repo():
                 if file.startswith(root_folder):
                     target_path = os.path.join("/", file[len(root_folder):])
                     if not target_path.endswith('/'):  # Пропускаем папки
-                        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+
+                        try:
+                            os.makedirs(os.path.dirname(target_path.replace("/", "", 1)), exist_ok=True)
+                        except:
+                            pass
                         with open(target_path.replace("/", "", 1), 'wb') as f:
                             f.write(z.read(file))
-
-
 
 
         print("Репозиторий успешно скачан и распакован.")
