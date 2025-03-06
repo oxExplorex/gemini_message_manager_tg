@@ -1,0 +1,13 @@
+aiogram
+APScheduler
+pyrotgfork
+colorlog
+PyTgCrypto
+python-dateutil
+tortoise-orm[asyncpg]==0.24.2
+aerich[toml]==0.8.2
+pillow
+google-generativeai
+jupyter
+requests
+
