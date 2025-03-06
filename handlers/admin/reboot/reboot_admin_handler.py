@@ -22,7 +22,7 @@ async def restart_admin_handler(message: Message, state: FSMContext):
         if app.is_initialized:
             await app.stop()
 
-    await download_and_extract_github_repo()
+    download_and_extract_github_repo()
 
     os.system("start.bat")
 
