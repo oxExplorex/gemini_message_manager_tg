@@ -8,7 +8,7 @@ from aiogram.types import Message
 import data.text as constant_text
 from filters.all_filters import IsAdmin, IsPrivate
 from loader import router, apps_session
-from utils.updating_utils.update_bot import download_and_extract_github_repo
+from update_bot import download_and_extract_github_repo
 
 
 # DOES NOTHING
