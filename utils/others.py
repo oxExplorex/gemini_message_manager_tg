@@ -31,10 +31,11 @@ async def send_log_to_active_bot(bot: aiogram.Bot):
 def get_user_log_text(action_id, _chat_id, username, _quote):
 
     _text = ""
+    link_id = f'tg://user?id={_chat_id}'
     if action_id == 1:
-        _text += f"💬 Обнаружен новый чат:\n - tg://user?id={_chat_id} | <code>{_chat_id}</code>\n - @{username} | {_quote}\n"
+        _text += f"💬 Обнаружен новый чат:\n - <code>{_chat_id}</code> <a href=\"{link_id}\">📌</a> | @{username} | {_quote}\n"
     elif action_id == 2:
-        _text += f"❗️ Хуесос удалил чат:\n - tg://user?id={_chat_id} | <code>{_chat_id}</code>\n - @{username} | {_quote}\n"
+        _text += f"❗️ Хуесос удалил чат:\n - <code>{_chat_id}</code> <a href=\"{link_id}\">📌</a> | @{username} | {_quote}\n"
     else:
         _text = "error?"
     return _text
