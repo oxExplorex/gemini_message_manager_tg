@@ -1,6 +1,6 @@
 aiogram
 APScheduler
-pyrotgfork
+pyrotgfork==2.2.9
 colorlog
 PyTgCrypto
 python-dateutil

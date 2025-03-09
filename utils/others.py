@@ -32,9 +32,9 @@ def get_user_log_text(action_id, _chat_id, username, _quote):
 
     _text = ""
     if action_id == 1:
-        _text += f"💬 Обнаружен новый чат: <a href='tg://user?id={_chat_id}'>{_chat_id}</a> @{username} | {_quote}\n"
+        _text += f"💬 Обнаружен новый чат:\n - tg://user?id={_chat_id} | <code>{_chat_id}</code>\n - @{username} | {_quote}\n"
     elif action_id == 2:
-        _text += f"❗️ Хуесос удалил чат <a href='tg://user?id={_chat_id}'>{_chat_id}</a> @{username} | {_quote}\n"
+        _text += f"❗️ Хуесос удалил чат:\n - tg://user?id={_chat_id} | <code>{_chat_id}</code>\n - @{username} | {_quote}\n"
     else:
         _text = "error?"
     return _text
