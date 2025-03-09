@@ -9,6 +9,8 @@ from db.main import update_user, get_dump_chat_user, get_account_tg_to_user_id, 
 from loader import router, bot
 from aiogram import html
 
+from utils.others import get_user_log_text
+
 
 @router.business_message(
     F.media_group_id,
@@ -44,6 +46,6 @@ async def any_message_media_handler(message: Message, state: FSMContext):
         _settings = await get_account_tg_to_user_id(_admin_id)
         if _settings.alert_new_chat:
             _log_chat_id = _settings.admin_id if _settings.alert_new_chat_id < 10 else _settings.alert_new_chat_id
-            await bot.send_message(_log_chat_id, f"💬 Обнаружен новый чат: {_chat_id} @{username} | {_quote}\n")
+            await bot.send_message(_log_chat_id, get_user_log_text(1, _chat_id, username, _quote))
 
 

@@ -7,6 +7,7 @@ from _logging import bot_logger
 from db.main import get_dump_chat_admin_all, update_user, get_user, create_dump_chat_user, del_dump_chat_user, \
     get_account_tg_to_user_id
 from loader import apps_session, bot
+from utils.others import get_user_log_text
 
 scheduler = AsyncIOScheduler()
 
@@ -78,13 +79,13 @@ async def __tg_parse_dialogs_handler():
                         await create_dump_chat_user(admin_id, _chat_id)
 
                         _quote = html.quote(chat_name) if chat_name else chat_name
-                        _add_log(_list_log, f"💬 Обнаружен новый чат: {_chat_id} @{username} | {_quote}\n")
+                        _add_log(_list_log, get_user_log_text(1, _chat_id, username, _quote))
                     else:
                         bot_logger.info(f"USER: {admin_id} | Удаленный чат {_chat_id} @{username} | {chat_name}")
                         await del_dump_chat_user(admin_id, _chat_id)
 
                         _quote = html.quote(chat_name) if chat_name else chat_name
-                        _add_log(_list_log_del, f"❗️ Хуесос удалил чат {_chat_id} @{username} | {_quote}")
+                        _add_log(_list_log_del, get_user_log_text(2, _chat_id, username, _quote))
 
                 _settings = await get_account_tg_to_user_id(admin_id)
                 if _settings.alert_new_chat:

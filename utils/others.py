@@ -28,6 +28,16 @@ async def send_log_to_active_bot(bot: aiogram.Bot):
         except:
             pass
 
+def get_user_log_text(action_id, _chat_id, username, _quote):
+
+    _text = ""
+    if action_id == 1:
+        _text += f"💬 Обнаружен новый чат: <a href='tg://user_id={_chat_id}'>{_chat_id}</a> @{username} | {_quote}\n"
+    elif action_id == 2:
+        _text += f"❗️ Хуесос удалил чат <a href='tg://user_id={_chat_id}'>{_chat_id}</a> @{username} | {_quote}\n"
+    else:
+        _text = "error?"
+    return _text
 
 
 async def not_warning_delete_message(chat_id: int = None, message_id: int = None, message: Union[CallbackQuery, Message] = None) -> bool:
