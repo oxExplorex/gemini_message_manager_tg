@@ -21,6 +21,8 @@ if os.path.exists("data/proxy.txt"):
     os.environ['https_proxy'] = proxy
     os.environ['HTTPS_PROXY'] = proxy
     os.environ['HTTPS_PROXY'] = proxy
+    os.environ['grpc_proxy'] = proxy  # GRPC прокси
+    os.environ['GRPC_PROXY'] = proxy  # GRPC прокси (верхний регистр)
 
 genai.configure(api_key=GEMINI_KEY)
 
