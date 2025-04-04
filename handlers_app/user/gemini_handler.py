@@ -61,6 +61,18 @@ def _get_mime_type(_repl):
 
 
 async def gemini_app_handler(client: Client, message: Message):
+    if os.path.exists("data/proxy.txt"):
+        with open("data/proxy.txt", "r") as file:
+            _ip, _port, _user, _password = file.read().split(":")
+
+        proxy = f'http://{_user}:{_password}@{_ip}:{_port}'
+
+        bot_logger.info(f"Установлены прокси {proxy}")
+
+        os.environ['http_proxy'] = proxy
+        os.environ['HTTP_PROXY'] = proxy
+        os.environ['https_proxy'] = proxy
+        os.environ['HTTPS_PROXY'] = proxy
 
     if (await client.get_me()).id != message.from_user.id:
         return
