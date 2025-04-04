@@ -14,13 +14,13 @@ if os.path.exists("data/proxy.txt"):
 
     proxy = f'http://{_user}:{_password}@{_ip}:{_port}'
 
-    bot_logger.info(f"Установлены прокси {proxy}")
+    bot_logger.info(f"Установлены прокси : {proxy}")
 
     os.environ['http_proxy'] = proxy
     os.environ['HTTP_PROXY'] = proxy
     os.environ['https_proxy'] = proxy
     os.environ['HTTPS_PROXY'] = proxy
-
+    os.environ['HTTPS_PROXY'] = proxy
 
 genai.configure(api_key=GEMINI_KEY)
 
