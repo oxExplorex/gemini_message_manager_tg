@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from aiogram import Dispatcher
 
@@ -18,6 +19,18 @@ from loader import bot, loop, apps_session
 from middlewares.media_group import AlbumMiddleware
 from middlewares.update_user import UpdateUserMiddleware
 from utils.others import send_log_to_active_bot
+
+if os.path.exists("data/proxy.txt"):
+    bot_logger.info("Установлены прокси")
+    with open("data/proxy.txt", "r") as file:
+        _ip, _port, _user, _password = file.read().split(":")
+
+    proxy = f'http://{_user}:{_password}@{_ip}:{_port}'
+
+    os.environ['http_proxy'] = proxy
+    os.environ['HTTP_PROXY'] = proxy
+    os.environ['https_proxy'] = proxy
+    os.environ['HTTPS_PROXY'] = proxy
 
 
 async def start_polling_bot():
