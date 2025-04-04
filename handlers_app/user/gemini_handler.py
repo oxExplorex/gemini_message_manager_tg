@@ -1,14 +1,24 @@
-import pathlib
+import os.path
 
 import google.generativeai as genai
-from PIL import Image
-from pyrogram import Client, filters
+from pyrogram import Client
 from pyrogram.types import Message
 
+from _logging import bot_logger
 from config_statistic import SAFETY_SETTINGS, SYSTEM_INSTRUCTION
-from data.config import admin_id_list, GEMINI_KEY
+from data.config import GEMINI_KEY
 
+if os.path.exists("data/proxy.txt"):
+    bot_logger.info("Установлены прокси")
+    with open("data/proxy.txt", "r") as file:
+        _ip, _port, _user, _password = file.read().split(":")
 
+    proxy = f'http://{_user}:{_password}@{_ip}:{_port}'
+
+    os.environ['http_proxy'] = proxy
+    os.environ['HTTP_PROXY'] = proxy
+    os.environ['https_proxy'] = proxy
+    os.environ['HTTPS_PROXY'] = proxy
 
 genai.configure(api_key=GEMINI_KEY)
 

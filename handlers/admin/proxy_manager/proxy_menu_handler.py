@@ -8,6 +8,8 @@ from filters.all_filters import IsAdmin, IsPrivate
 from loader import router
 
 
+
+
 # DOES NOTHING
 @router.message(IsPrivate(), IsAdmin(), F.text.in_(constant_text.PROXY_USER_KEYBOARD), StateFilter("*"))
 async def proxy_menu_handler(message: Message, state: FSMContext):
@@ -15,5 +17,28 @@ async def proxy_menu_handler(message: Message, state: FSMContext):
 
     _user_id = message.from_user.id
 
-    await message.answer("В разработке")
+    await message.answer("Введите прокси для работы с gemini\n\nФормат:\n{ip}:{port}:{user}:{password}")
+    await state.set_state("wait_proxy_manager")
+
+
+# DOES NOTHING
+@router.message(IsPrivate(), IsAdmin(), StateFilter("*"))
+async def proxy_menu_handler(message: Message, state: FSMContext):
+    await state.clear()
+
+    if message.text.count(":") == 3:
+        _ip, _port, _user, _password = message.text.split(":")
+
+        with open("data/proxy.txt", "w") as file:
+            file.write(f"{_ip}:{_port}:{_user}:{_password}")
+
+        return await message.answer("Прокси установлены")
+
+    return await message.answer("Неверный формат прокси")
+
+
+
+
+
+
 

@@ -5,6 +5,7 @@
 
 # config
 config.py
+proxy.txt
 
 # сессии тг
 *.session-journal
