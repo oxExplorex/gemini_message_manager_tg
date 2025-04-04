@@ -5,8 +5,9 @@ from pyrogram import Client
 from pyrogram.types import Message
 
 from _logging import bot_logger
-from config_statistic import SAFETY_SETTINGS, SYSTEM_INSTRUCTION
+from config_statistic import SAFETY_SETTINGS
 from data.config import GEMINI_KEY
+
 
 if os.path.exists("data/proxy.txt"):
     with open("data/proxy.txt", "r") as file:
@@ -26,6 +27,8 @@ if os.path.exists("data/proxy.txt"):
 
 genai.configure(api_key=GEMINI_KEY)
 
+with open("data/promt_ai_userbot.txt", "r", encoding="utf-8") as file:
+    SYSTEM_INSTRUCTION = file.read()
 
 model = genai.GenerativeModel(
     model_name='gemini-2.0-flash',
