@@ -74,6 +74,7 @@ async def gemini_app_handler(client: Client, message: Message):
         os.environ['https_proxy'] = proxy
         os.environ['HTTPS_PROXY'] = proxy
         os.environ["GRPC_PROXY"] = proxy
+        os.environ["ALL_PROXY"] = proxy
 
     if (await client.get_me()).id != message.from_user.id:
         return
