@@ -1,6 +1,7 @@
 import os.path
 
 import google.generativeai as genai
+import requests
 from pyrogram import Client
 from pyrogram.types import Message
 
@@ -11,6 +12,21 @@ from data.config import GEMINI_KEY
 
 
 genai.configure(api_key=GEMINI_KEY)
+if os.path.exists("data/proxy.txt"):
+    with open("data/proxy.txt", "r") as file:
+        _ip, _port, _user, _password = file.read().split(":")
+
+    proxy = f'http://{_user}:{_password}@{_ip}:{_port}'
+
+    bot_logger.info(f"Установлены прокси {proxy}")
+
+    session = requests.Session()  # Create a requests session
+    proxies = {
+        'http': proxy,
+        'https': proxy,
+    }
+    session.proxies = proxies      # Set the proxies
+    genai.transport._session = session # Assign the session to genai
 
 model = genai.GenerativeModel(
     model_name='gemini-2.0-flash',
@@ -61,20 +77,7 @@ def _get_mime_type(_repl):
 
 
 async def gemini_app_handler(client: Client, message: Message):
-    if os.path.exists("data/proxy.txt"):
-        with open("data/proxy.txt", "r") as file:
-            _ip, _port, _user, _password = file.read().split(":")
 
-        proxy = f'http://{_user}:{_password}@{_ip}:{_port}'
-
-        bot_logger.info(f"Установлены прокси {proxy}")
-
-        os.environ['http_proxy'] = proxy
-        os.environ['HTTP_PROXY'] = proxy
-        os.environ['https_proxy'] = proxy
-        os.environ['HTTPS_PROXY'] = proxy
-        os.environ["GRPC_PROXY"] = proxy
-        os.environ["ALL_PROXY"] = proxy
 
     if (await client.get_me()).id != message.from_user.id:
         return
