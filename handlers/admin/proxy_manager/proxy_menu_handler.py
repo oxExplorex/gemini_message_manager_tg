@@ -22,7 +22,7 @@ async def proxy_menu_handler(message: Message, state: FSMContext):
 
 
 # DOES NOTHING
-@router.message(IsPrivate(), IsAdmin(), StateFilter("*"))
+@router.message(IsPrivate(), IsAdmin(), StateFilter("wait_proxy_manager"))
 async def proxy_menu_handler(message: Message, state: FSMContext):
     await state.clear()
 
