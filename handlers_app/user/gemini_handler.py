@@ -1,7 +1,6 @@
-import os.path
+import os
 
 import google.generativeai as genai
-import requests
 from pyrogram import Client
 from pyrogram.types import Message
 
@@ -9,9 +8,6 @@ from _logging import bot_logger
 from config_statistic import SAFETY_SETTINGS, SYSTEM_INSTRUCTION
 from data.config import GEMINI_KEY
 
-
-
-genai.configure(api_key=GEMINI_KEY)
 if os.path.exists("data/proxy.txt"):
     with open("data/proxy.txt", "r") as file:
         _ip, _port, _user, _password = file.read().split(":")
@@ -20,18 +16,19 @@ if os.path.exists("data/proxy.txt"):
 
     bot_logger.info(f"Установлены прокси {proxy}")
 
-    session = requests.Session()  # Create a requests session
-    proxies = {
-        'http': proxy,
-        'https': proxy,
-    }
-    session.proxies = proxies      # Set the proxies
-    genai.transport._session = session # Assign the session to genai
+    os.environ['HTTP_PROXY'] = proxy
+    os.environ['HTTPS_PROXY'] = proxy
+
+
+
+genai.configure(api_key=GEMINI_KEY)
+
 
 model = genai.GenerativeModel(
     model_name='gemini-2.0-flash',
     system_instruction=SYSTEM_INSTRUCTION,
     safety_settings=SAFETY_SETTINGS,
+
 )
 chat_gemini = model.start_chat(history=[])
 
