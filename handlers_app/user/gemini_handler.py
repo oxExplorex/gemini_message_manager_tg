@@ -91,7 +91,7 @@ async def gemini_app_handler(client: Client, message: Message):
     else:
         _parts = [
             genai.protos.Part(text=_protos(_promt_root, message, None)) if _promt_root else genai.protos.Part(text="?"),
-            genai.protos.Part(text=_protos(_promt_reply, message, None)) if _promt_reply else genai.protos.Part(text="?")
+            genai.protos.Part(text=_protos(_promt_reply,  message.reply_to_message, None)) if _promt_reply else genai.protos.Part(text="?")
         ]
 
         response = await chat_gemini.send_message_async(
