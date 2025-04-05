@@ -1,42 +1,10 @@
-import os
 
 import google.generativeai as genai
 from pyrogram import Client
 from pyrogram.types import Message
 
 from _logging import bot_logger
-from config_statistic import SAFETY_SETTINGS
-from data.config import GEMINI_KEY
-
-
-if os.path.exists("data/proxy.txt"):
-    with open("data/proxy.txt", "r") as file:
-        _ip, _port, _user, _password = file.read().split(":")
-
-    proxy = f'http://{_user}:{_password}@{_ip}:{_port}'
-
-    bot_logger.info(f"Установлены прокси : {proxy}")
-
-    os.environ['http_proxy'] = proxy
-    os.environ['HTTP_PROXY'] = proxy
-    os.environ['https_proxy'] = proxy
-    os.environ['HTTPS_PROXY'] = proxy
-    os.environ['HTTPS_PROXY'] = proxy
-    os.environ['grpc_proxy'] = proxy  # GRPC прокси
-    os.environ['GRPC_PROXY'] = proxy  # GRPC прокси (верхний регистр)
-
-genai.configure(api_key=GEMINI_KEY)
-
-with open("data/promt_ai_userbot.txt", "r", encoding="utf-8") as file:
-    SYSTEM_INSTRUCTION = file.read()
-
-model = genai.GenerativeModel(
-    model_name='gemini-2.0-flash',
-    system_instruction=SYSTEM_INSTRUCTION,
-    safety_settings=SAFETY_SETTINGS,
-
-)
-chat_gemini = model.start_chat(history=[])
+from loader import chat_gemini
 
 
 def get_answer_text_list(_promt, question, answer):
@@ -46,7 +14,7 @@ def get_answer_text_list(_promt, question, answer):
     _temp_str += f"<emoji id=5276507609652802495>👀</emoji> Промт: {_promt}\n\n" if _promt else ""
     _temp_str += f"<emoji id=5206479194388713063>❓</emoji> Вопрос: {question}\n\n" if question else ""
     _temp_str += f"<emoji id=5370939500811791703>🤓</emoji> Ответ: {answer.text}"
-    _temp_str = f"{answer.text}"
+    _temp_str = f"{answer.text.replace("\\n", "\n")}"
     return _temp_str
 
 
@@ -77,11 +45,13 @@ def _get_mime_type(_repl):
             return "image/png"
     return None
 
-
+def _protos(_text, message: Message, _mime_type):
+    # Так, делаем
+    if _mime_type:
+        return f"[Сообщение от @{message.from_user.username} ({message.from_user.id}) с вложением ниже |{message.from_user.full_name}] {_text}"
+    return f"[Сообщение от @{message.from_user.username} ({message.from_user.id}) |{message.from_user.full_name}] {_text}"
 
 async def gemini_app_handler(client: Client, message: Message):
-
-
     if (await client.get_me()).id != message.from_user.id:
         return
 
@@ -102,12 +72,12 @@ async def gemini_app_handler(client: Client, message: Message):
         animation = await message.reply_to_message.download(in_memory=True)
 
         _parts = [
-            genai.protos.Part(text=_promt_root) if _promt_root else None,
-            genai.protos.Part(text=_promt_reply) if _promt_reply else None,
+            genai.protos.Part(text=_protos(_promt_root, message, None)) if _promt_root else None,
+            genai.protos.Part(text=_protos(_promt_reply, message.reply_to_message, _mime_type)) if _promt_reply else None,
             genai.protos.Part(
                 inline_data=genai.protos.Blob(
-                mime_type=_mime_type,
-                data=animation.getbuffer().tobytes()
+                    mime_type=_mime_type,
+                    data=animation.getbuffer().tobytes()
                 )
             )
         ]
@@ -120,8 +90,8 @@ async def gemini_app_handler(client: Client, message: Message):
         )
     else:
         _parts = [
-            genai.protos.Part(text=_promt_root) if _promt_root else genai.protos.Part(text="?"),
-            genai.protos.Part(text=_promt_reply) if _promt_reply else genai.protos.Part(text="?")
+            genai.protos.Part(text=_protos(_promt_root, message, None)) if _promt_root else genai.protos.Part(text="?"),
+            genai.protos.Part(text=_protos(_promt_reply, message, None)) if _promt_reply else genai.protos.Part(text="?")
         ]
 
         response = await chat_gemini.send_message_async(
@@ -129,6 +99,7 @@ async def gemini_app_handler(client: Client, message: Message):
                 parts=_parts,
             ),
         )
+
 
     await message.edit_text(
         text=get_answer_text_list(_promt_root, _promt_reply, response),

@@ -1,7 +1,4 @@
 import asyncio
-import os
-
-from aiogram import Dispatcher
 
 from aiogram import Dispatcher
 from pyrogram import compose, filters
