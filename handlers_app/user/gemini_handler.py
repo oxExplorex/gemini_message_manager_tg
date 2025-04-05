@@ -46,7 +46,7 @@ def get_answer_text_list(_promt, question, answer):
     _temp_str += f"<emoji id=5276507609652802495>👀</emoji> Промт: {_promt}\n\n" if _promt else ""
     _temp_str += f"<emoji id=5206479194388713063>❓</emoji> Вопрос: {question}\n\n" if question else ""
     _temp_str += f"<emoji id=5370939500811791703>🤓</emoji> Ответ: {answer.text}"
-
+    _temp_str = f"{answer.text}"
     return _temp_str
 
 
