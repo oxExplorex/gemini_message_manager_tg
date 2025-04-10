@@ -1,107 +1,124 @@
 import traceback
+import asyncio
+from typing import Callable, Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from aiogram import html
+from pyrogram.errors import RPCError, InternalServerError, FloodWait
 
 from _logging import bot_logger
-from db.main import get_dump_chat_admin_all, update_user, get_user, create_dump_chat_user, del_dump_chat_user, \
-    get_account_tg_to_user_id
+from db.main import (
+    get_dump_chat_admin_all, update_user, get_user,
+    create_dump_chat_user, del_dump_chat_user, get_account_tg_to_user_id
+)
 from loader import apps_session, bot
 from utils.others import get_user_log_text
 
 scheduler = AsyncIOScheduler()
 
 
-def _add_log(_list_log, _text):
+async def safe_call(coro_func: Callable, *args: Any, retries: int = 3, delay: int = 2, **kwargs: Any) -> Any:
+    for i in range(retries):
+        try:
+            return await coro_func(*args, **kwargs)
+        except FloodWait as e:
+            bot_logger.warning(f"FloodWait: sleeping for {e.value} seconds")
+            await asyncio.sleep(e.value)
+        except (RPCError, InternalServerError) as e:
+            bot_logger.warning(f"Attempt {i + 1}/{retries} failed: {type(e).__name__} — {e}")
+            await asyncio.sleep(delay * (2 ** i))
+    bot_logger.error(f"All retries failed for {coro_func.__name__}")
+    raise Exception(f"safe_call: all retries failed for {coro_func.__name__}")
 
-    if not _list_log:
-        _list_log.append("")
 
-    if len(_list_log[-1]) >= 3500:
-        _list_log.append("")
-
-    _list_log[-1] += _text
-    return
+def chunk_text(messages: list[str], max_length: int = 3500) -> list[str]:
+    result, current = [], ""
+    for msg in messages:
+        if len(current) + len(msg) >= max_length:
+            result.append(current)
+            current = ""
+        current += msg
+    if current:
+        result.append(current)
+    return result
 
 
 @scheduler.scheduled_job('interval', minutes=20)
 async def __tg_parse_dialogs_handler():
     try:
-        if apps_session is None:
+        if not apps_session:
             return bot_logger.error("apps_session is None")
 
         for app_session in apps_session:
             try:
-                admin_id = (await app_session.get_me()).id
+                admin_id = (await safe_call(app_session.get_me)).id
 
-                last_check_chat_id = [x.chat_id for x in await get_dump_chat_admin_all(admin_id)]
+                existing_chat_ids = {x.chat_id for x in await get_dump_chat_admin_all(admin_id)}
+                current_chat_ids = set()
+                new_chats = []
 
-                count_dialogs = await app_session.get_dialogs_count(pinned_only=None, chat_list=0)
-                count_dialogs = await app_session.get_dialogs_count(pinned_only=None, chat_list=1) + count_dialogs
+                total_dialogs = (
+                    await safe_call(app_session.get_dialogs_count, pinned_only=None, chat_list=0) +
+                    await safe_call(app_session.get_dialogs_count, pinned_only=None, chat_list=1)
+                )
 
-                parse_list = []
-                new_chat = []
+                bot_logger.info(f'START USER: {admin_id} | {total_dialogs}')
 
-                _list_log = []
-                _list_log_del = []
+                try:
+                    async for dialog in app_session.get_dialogs(limit=total_dialogs + 10, pinned_only=True, chat_list=None):
+                        chat_id = dialog.chat.id
+                        username = dialog.chat.username
+                        chat_name = dialog.chat.full_name or dialog.chat.title
 
-                bot_logger.info(f'START USER: {admin_id} | {count_dialogs}')
-                async for x in app_session.get_dialogs(limit=count_dialogs + 10, pinned_only=True,
-                                                       chat_list=None):  # chat_list - 0 Main | 1 Archive | None All
-                    chat_id = x.chat.id
-                    username = x.chat.username
-                    chat_name = x.chat.full_name or x.chat.title
+                        if chat_id not in current_chat_ids:
+                            current_chat_ids.add(chat_id)
 
-                    if chat_id not in last_check_chat_id and chat_id not in parse_list:
-                        new_chat.append(chat_id)
+                            await update_user(chat_id, username, chat_name)
 
-                    if chat_id in parse_list:
-                        pass
+                            if chat_id not in existing_chat_ids:
+                                new_chats.append(chat_id)
+                except (RPCError, InternalServerError) as e:
+                    bot_logger.warning(f"get_dialogs error: {e}")
+                    continue
+
+                # Новые и удалённые чаты
+                deleted_chats = existing_chat_ids - current_chat_ids
+                all_changes = new_chats + list(deleted_chats)
+
+                log_new = []
+                log_del = []
+
+                for chat_id in all_changes:
+                    user = await get_user(chat_id)
+                    username = user.username if user else "Ошибка"
+                    chat_name = user.full_name if user else "Ошибка"
+                    quote = html.quote(chat_name) if chat_name else chat_name
+
+                    if chat_id in new_chats:
+                        bot_logger.info(f"USER: {admin_id} | Новый чат {chat_id} @{username} | {chat_name}")
+                        await create_dump_chat_user(admin_id, chat_id)
+                        log_new.append(get_user_log_text(1, chat_id, username, quote))
                     else:
-                        parse_list.append(chat_id)
+                        bot_logger.info(f"USER: {admin_id} | Удаленный чат {chat_id} @{username} | {chat_name}")
+                        await del_dump_chat_user(admin_id, chat_id)
+                        log_del.append(get_user_log_text(2, chat_id, username, quote))
 
-                        await update_user(chat_id, username, chat_name)
+                settings = await get_account_tg_to_user_id(admin_id)
 
+                if settings.alert_new_chat:
+                    target_id = settings.admin_id if settings.alert_new_chat_id < 10 else settings.alert_new_chat_id
+                    for text_chunk in chunk_text(log_new):
+                        await bot.send_message(target_id, text_chunk)
 
-                # обрабатываем новые чаты и удаленные
-                _temp = [x for x in last_check_chat_id if x not in parse_list + new_chat]
-                for _chat_id in new_chat + _temp:
-                    _user = await get_user(_chat_id)
-                    if not _user:
-                        username = "Ошибка"
-                        chat_name = "Ошибка"
-                    else:
-                        username = _user.username
-                        chat_name = _user.full_name
+                if settings.alert_del_chat:
+                    target_id = settings.admin_id if settings.alert_del_chat_id < 10 else settings.alert_del_chat_id
+                    for text_chunk in chunk_text(log_del):
+                        await bot.send_message(target_id, text_chunk)
 
-                    if _chat_id in new_chat:
-                        bot_logger.info(f"USER: {admin_id} | Новый чат {_chat_id} @{username} | {chat_name}")
-                        await create_dump_chat_user(admin_id, _chat_id)
-
-                        _quote = html.quote(chat_name) if chat_name else chat_name
-                        _add_log(_list_log, get_user_log_text(1, _chat_id, username, _quote))
-                    else:
-                        bot_logger.info(f"USER: {admin_id} | Удаленный чат {_chat_id} @{username} | {chat_name}")
-                        await del_dump_chat_user(admin_id, _chat_id)
-
-                        _quote = html.quote(chat_name) if chat_name else chat_name
-                        _add_log(_list_log_del, get_user_log_text(2, _chat_id, username, _quote))
-
-                _settings = await get_account_tg_to_user_id(admin_id)
-                if _settings.alert_new_chat:
-                    _log_chat_id = _settings.admin_id if _settings.alert_new_chat_id < 10 else _settings.alert_new_chat_id
-                    for _text in _list_log:
-                        await bot.send_message(_log_chat_id, _text)
-
-                if _settings.alert_del_chat:
-                    _log_chat_id = _settings.admin_id if _settings.alert_del_chat_id < 10 else _settings.alert_del_chat_id
-                    for _text in _list_log_del:
-                        await bot.send_message(_log_chat_id, _text)
-
-            except Exception as e:
+            except Exception:
                 bot_logger.error(traceback.format_exc())
 
-    except:
+    except Exception:
         bot_logger.error(traceback.format_exc())
 
 
