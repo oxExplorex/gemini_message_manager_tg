@@ -108,19 +108,23 @@ async def _get_gemini_chat():
 
         if os.path.exists("data/proxy.txt"):
             with open("data/proxy.txt", "r") as file:
-                _ip, _port, _user, _password = file.read().split(":")
+                _proxy = file.read()
+                if _proxy == "0":
+                    pass
+                else:
+                    _ip, _port, _user, _password = _proxy.split(":")
 
-            proxy = f'http://{_user}:{_password}@{_ip}:{_port}'
+                    proxy = f'http://{_user}:{_password}@{_ip}:{_port}'
 
-            bot_logger.info(f"Установлены прокси : {proxy}")
+                    bot_logger.info(f"Установлены прокси : {proxy}")
 
-            os.environ['http_proxy'] = proxy
-            os.environ['HTTP_PROXY'] = proxy
-            os.environ['https_proxy'] = proxy
-            os.environ['HTTPS_PROXY'] = proxy
-            os.environ['HTTPS_PROXY'] = proxy
-            os.environ['grpc_proxy'] = proxy  # GRPC прокси
-            os.environ['GRPC_PROXY'] = proxy  # GRPC прокси (верхний регистр)
+                    os.environ['http_proxy'] = proxy
+                    os.environ['HTTP_PROXY'] = proxy
+                    os.environ['https_proxy'] = proxy
+                    os.environ['HTTPS_PROXY'] = proxy
+                    os.environ['HTTPS_PROXY'] = proxy
+                    os.environ['grpc_proxy'] = proxy  # GRPC прокси
+                    os.environ['GRPC_PROXY'] = proxy  # GRPC прокси (верхний регистр)
 
         genai.configure(api_key=GEMINI_KEY)
 

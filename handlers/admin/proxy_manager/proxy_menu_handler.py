@@ -17,7 +17,7 @@ async def proxy_menu_handler(message: Message, state: FSMContext):
 
     _user_id = message.from_user.id
 
-    await message.answer("Введите прокси для работы с gemini\n\nФормат:\n{ip}:{port}:{user}:{password}")
+    await message.answer("Введите прокси для работы с gemini\n\nФормат:\n{ip}:{port}:{user}:{password} Или 0 для отключения")
     await state.set_state("wait_proxy_manager")
 
 
@@ -33,6 +33,12 @@ async def proxy_menu_handler(message: Message, state: FSMContext):
             file.write(f"{_ip}:{_port}:{_user}:{_password}")
 
         return await message.answer("Прокси установлены")
+    elif message.text == "0":
+
+        with open("data/proxy.txt", "w") as file:
+            file.write(f"0")
+
+        return await message.answer("Прокси выключены")
 
     return await message.answer("Неверный формат прокси")
 
