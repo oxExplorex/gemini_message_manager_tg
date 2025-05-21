@@ -100,8 +100,6 @@ async def gemini_app_handler(client: Client, message: Message):
             ),
         )
 
-    bot_logger.info(chat_gemini.history)
-
     await message.edit_text(
         text=get_answer_text_list(_promt_root, _promt_reply, response),
     )
