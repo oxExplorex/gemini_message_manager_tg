@@ -12,6 +12,7 @@ from filters.all_filters_app import file_spoiler_filter
 from handlers import router
 from handlers_app.user.file_spoiler import file_spoiler_handler
 from handlers_app.user.gemini_handler import gemini_app_handler
+from handlers_app.user.reply_post_handler import reply_post_handler
 from loader import bot, loop, apps_session
 from middlewares.media_group import AlbumMiddleware
 from middlewares.update_user import UpdateUserMiddleware
@@ -33,7 +34,8 @@ async def start_polling_bot():
     dp.include_router(router)
 
     for app in apps_session:
-        app.add_handler(MessageHandler(gemini_app_handler, filters.command("", ".")))
+        app.add_handler(MessageHandler(gemini_app_handler, filters.command("", ". ")))
+        app.add_handler(MessageHandler(reply_post_handler, filters.command("", ".p")))
         app.add_handler(MessageHandler(file_spoiler_handler, (filters.photo | filters.video | filters.video_note) & file_spoiler_filter ))
 
     _ = loop.create_task(compose(apps_session))
