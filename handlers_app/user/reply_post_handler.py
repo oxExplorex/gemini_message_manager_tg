@@ -25,8 +25,8 @@ async def reply_post_handler(client: Client, message: Message):
     if "http" in url:
         try:
             await client.forward_messages(
-                chat_id=chat_id,
-                from_chat_id=message.chat.id,
+                chat_id=message.chat.id,
+                from_chat_id=chat_id,
                 message_ids=int(message_id)
             )
         except:
