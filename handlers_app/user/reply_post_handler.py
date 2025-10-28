@@ -27,7 +27,7 @@ async def reply_post_handler(client: Client, message: Message):
             await client.forward_messages(
                 chat_id=chat_id,
                 from_chat_id=message.chat.id,
-                message_thread_id=message_id
+                message_ids=int(message_id)
             )
         except:
             bot_logger.error(traceback.format_exc())
