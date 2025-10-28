@@ -35,7 +35,7 @@ async def start_polling_bot():
 
     for app in apps_session:
         app.add_handler(MessageHandler(gemini_app_handler, filters.command("", ". ")))
-        app.add_handler(MessageHandler(reply_post_handler, filters.command("", ".p ")))
+        app.add_handler(MessageHandler(reply_post_handler, filters.command("", [".р ", ".p"])))
         app.add_handler(MessageHandler(file_spoiler_handler, (filters.photo | filters.video | filters.video_note) & file_spoiler_filter ))
 
     _ = loop.create_task(compose(apps_session))
