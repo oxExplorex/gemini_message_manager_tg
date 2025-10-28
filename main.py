@@ -36,12 +36,12 @@ async def start_polling_bot():
     for app in apps_session:
         app.add_handler(MessageHandler(
             gemini_app_handler,
-            filters.command(".", "")
+            filters.command("", prefixes=".")
         ))
 
         app.add_handler(MessageHandler(
             reply_post_handler,
-            filters.command("+", prefixes="")  # Или используй filters.regex
+            filters.command("", prefixes="+")  # Или используй filters.regex
         ))
 
         app.add_handler(MessageHandler(
