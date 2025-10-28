@@ -34,7 +34,7 @@ async def start_polling_bot():
     dp.include_router(router)
 
     for app in apps_session:
-        app.add_handler(MessageHandler(reply_post_handler, filters.command("", "+ https://t.me")))
+        app.add_handler(MessageHandler(reply_post_handler, filters.command("", "+ http")))
 
         app.add_handler(MessageHandler(gemini_app_handler, filters.command("", ". ")))
 
